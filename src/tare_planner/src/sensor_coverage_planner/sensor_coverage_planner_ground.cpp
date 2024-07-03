@@ -217,7 +217,7 @@ bool SensorCoveragePlanner3D::initialize(ros::NodeHandle& nh, ros::NodeHandle& n
   lidar_model_ns::LiDARModel::setCloudDWZResol(pd_.planning_env_->GetPlannerCloudResolution());
 
   // initialize the timer, that will call the callback function after 20 minutes
-  timeout_timer_ = nh.createTimer(ros::Duration(15), &SensorCoveragePlanner3D::timeoutStopCallback, this);
+  timeout_timer_ = nh.createTimer(ros::Duration(1200), &SensorCoveragePlanner3D::timeoutStopCallback, this);
 
 
   execution_timer_ = nh.createTimer(ros::Duration(1.0), &SensorCoveragePlanner3D::execute, this);
