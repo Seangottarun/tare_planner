@@ -188,6 +188,20 @@ SensorCoveragePlanner3D::SensorCoveragePlanner3D(ros::NodeHandle& nh, ros::NodeH
   PrintExplorationStatus("Exploration Started", false);
 }
 
+// Callback function to be executed if the exploration hasn't stopped after 20 mins
+void SensorCoveragePlanner3D::timeoutStopCallback(const ros::TimerEvent&)
+{
+    ROS_INFO("20 minutes have passed.");
+    if (!exploration_finished_ && !pd_.grid_world_->IsReturningHome())
+    {
+      ROS_INFO("Exploration hasn't finished yet. Stopping exploration.");
+      // pd_.viewpoint_manager_->ResetViewPointCoverage();
+      exploration_timed_out_ = true;
+    
+    }
+    
+}
+
 bool SensorCoveragePlanner3D::initialize(ros::NodeHandle& nh, ros::NodeHandle& nh_p)
 {
   if (!pp_.ReadParameters(nh_p))
@@ -201,6 +215,10 @@ bool SensorCoveragePlanner3D::initialize(ros::NodeHandle& nh, ros::NodeHandle& n
   pd_.keypose_graph_->SetAllowVerticalEdge(false);
 
   lidar_model_ns::LiDARModel::setCloudDWZResol(pd_.planning_env_->GetPlannerCloudResolution());
+
+  // initialize the timer, that will call the callback function after 20 minutes
+  timeout_timer_ = nh.createTimer(ros::Duration(15), &SensorCoveragePlanner3D::timeoutStopCallback, this);
+
 
   execution_timer_ = nh.createTimer(ros::Duration(1.0), &SensorCoveragePlanner3D::execute, this);
 
@@ -246,6 +264,7 @@ void SensorCoveragePlanner3D::ExplorationStartCallback(const std_msgs::Bool::Con
 {
   if (start_msg->data)
   {
+    ROS_INFO("DEBUG MESSAGE");
     start_exploration_ = true;
   }
 }
@@ -623,6 +642,7 @@ void SensorCoveragePlanner3D::UpdateGlobalRepresentation()
   pd_.grid_world_->SetCurKeyposeGraphNodeInd(closest_node_ind);
   pd_.grid_world_->SetCurKeyposeGraphNodePosition(closest_node_position);
 
+  // #NOTE: Home (initial) pose of the robot is saved at this moment
   pd_.grid_world_->UpdateRobotPosition(pd_.robot_position_);
   if (!pd_.grid_world_->HomeSet())
   {
@@ -1278,11 +1298,13 @@ void SensorCoveragePlanner3D::CountDirectionChange()
 
 void SensorCoveragePlanner3D::execute(const ros::TimerEvent&)
 {
+  ROS_INFO("DEBUG MESSAGE 0");
   if (!pp_.kAutoStart && !start_exploration_)
   {
     ROS_INFO("Waiting for start signal");
     return;
   }
+  // ROS_INFO("DEBUG MESSAGE, start_exploration_:", start_exploration_);
   Timer overall_processing_timer("overall processing");
   update_representation_runtime_ = 0;
   local_viewpoint_sampling_runtime_ = 0;
@@ -1310,6 +1332,7 @@ void SensorCoveragePlanner3D::execute(const ros::TimerEvent&)
     update_representation_timer.Start();
 
     // Update grid world
+    // #NOTE: the home position is saved at the end of this function call
     UpdateGlobalRepresentation();
 
     int viewpoint_candidate_count = UpdateViewPoints();
@@ -1331,6 +1354,14 @@ void SensorCoveragePlanner3D::execute(const ros::TimerEvent&)
     else
     {
       pd_.viewpoint_manager_->ResetViewPointCoverage();
+    }
+
+    if (exploration_timed_out_ && !exploration_finished_)
+    {
+      PrintExplorationStatus("Exploration timed out, returning home", false);
+      pd_.viewpoint_manager_->ResetViewPointCoverage();
+      // pd_.grid_world_->ClearCellViewPointIndices();
+      pd_.grid_world_->Reset();
     }
 
     update_representation_timer.Stop(false);

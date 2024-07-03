@@ -167,6 +167,7 @@ public:
   explicit SensorCoveragePlanner3D(ros::NodeHandle& nh, ros::NodeHandle& nh_p);
   bool initialize(ros::NodeHandle& nh, ros::NodeHandle& nh_p);
   void execute(const ros::TimerEvent&);
+  void timeoutStopCallback(const ros::TimerEvent&);
   ~SensorCoveragePlanner3D() = default;
 
 private:
@@ -185,6 +186,7 @@ private:
   bool use_momentum_;
   bool lookahead_point_in_line_of_sight_;
   bool reset_waypoint_;
+  bool exploration_timed_out_;
   PlannerParameters pp_;
   PlannerData pd_;
   pointcloud_utils_ns::PointCloudDownsizer<pcl::PointXYZ> pointcloud_downsizer_;
@@ -207,6 +209,7 @@ private:
   ros::Time global_direction_switch_time_;
 
   ros::Timer execution_timer_;
+  ros::Timer timeout_timer_;
 
   // ROS subscribers
   ros::Subscriber exploration_start_sub_;
