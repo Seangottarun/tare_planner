@@ -70,11 +70,11 @@ keypose_graph/kAddEdgeCollisionCheckRadius : 0.4
 keypose_graph/kAddEdgeCollisionCheckPointNumThr : 1
 
 # ViewPointManager
-viewpoint_manager/number_x : 20
-viewpoint_manager/number_y : 20
+viewpoint_manager/number_x : 15
+viewpoint_manager/number_y : 15
 viewpoint_manager/number_z : 1
-viewpoint_manager/resolution_x : 0.5
-viewpoint_manager/resolution_y : 0.5
+viewpoint_manager/resolution_x : 0.6
+viewpoint_manager/resolution_y : 0.6
 viewpoint_manager/resolution_z : 0.0
 kConnectivityHeightDiffThr : 0.25
 kGreedyViewPointSampleRange : 3
@@ -93,8 +93,8 @@ kViewPointHeightFromTerrainChangeThreshold : 0.6
 kCheckDynamicObstacleCollision : false
 kCollisionFrameCountMax : 3
 
-kSensorRange : 7.5
-kNeighborRange : 3.0
+kSensorRange : 3.5
+kNeighborRange : 1.0
 kCoverageOcclusionThr : 0.3
 kCoverageDilationRadius : 0.5
 
